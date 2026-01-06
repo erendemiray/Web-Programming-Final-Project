@@ -58,6 +58,9 @@ export default function LoginPage() {
         <button type="submit" className="w-full bg-blue-600 py-2 rounded font-bold hover:bg-blue-700 transition">
           Sign In
         </button>
+        <p className="mt-4 text-sm text-center text-gray-400">
+          Don't have an account? <a href="/register" className="text-blue-400 hover:underline">Register here</a>
+        </p>
       </form>
     </div>
   );
