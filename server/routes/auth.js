@@ -27,39 +27,37 @@ router.post('/register', async (req, res) => {
 // LOGIN (Hata Dedektifli Versiyon)
 router.post('/login', async (req, res) => {
   try {
-    console.log("1. Login isteği geldi. Body:", req.body); // Gelen veriyi görelim
-
-    // Kullanıcıyı bul
     const user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      console.log("2. Kullanıcı bulunamadı!");
-      return res.status(404).json("User not found!");
-    }
+    if (!user) return res.status(404).json("User not found!");
 
-    // Şifreyi kontrol et
     const validPassword = await bcrypt.compare(req.body.password, user.password);
-    if (!validPassword) {
-      console.log("3. Şifre yanlış!");
-      return res.status(400).json("Wrong password!");
-    }
+    if (!validPassword) return res.status(400).json("Wrong password!");
 
-    // Token oluştur
     const accessToken = jwt.sign(
-      { id: user._id, role: user.role }, 
+      { id: user._id, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
       { expiresIn: "5d" }
     );
 
-    console.log("4. Giriş başarılı, Token üretildi.");
-    const { password, ...info } = user._doc; 
+    // Admin durumuna göre dinamik mesaj
+    const welcomeMessage = user.isAdmin 
+      ? `Yönetici Paneline Hoş Geldiniz, Sayın Admin ${user.username}. Tüm yetkiler aktif.` 
+      : `Giriş başarılı! Hoş geldin, ${user.username}`;
 
-    res.status(200).json({ ...info, accessToken });
+    const { password, ...info } = user._doc;
+
+    res.status(200).json({
+      ...info,
+      message: welcomeMessage,
+      accessToken,
+      isAdmin: user.isAdmin,
+      username: user.username
+    });
 
   } catch (err) {
-    // !!! İŞTE BURASI HATAYI GÖSTERECEK !!!
-    console.error("❌ LOGIN SİSTEM HATASI:", err); 
     res.status(500).json({ mesaj: "Sunucu Hatası", detay: err.message });
   }
 });
+
 
 module.exports = router;
