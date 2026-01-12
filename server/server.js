@@ -114,6 +114,29 @@ const seedMovies = async () => {
   }
 };
 
+const Comment = require("./models/comment");
+
+// Belirli bir filme ait yorumları getir
+app.get("/api/comments/:movieId", async (req, res) => {
+  try {
+    const comments = await Comment.find({ movieId: req.params.movieId }).sort({ createdAt: -1 });
+    res.status(200).json(comments);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// Yorum ekle
+app.post("/api/comments/add", async (req, res) => {
+  try {
+    const newComment = new Comment(req.body);
+    const savedComment = await newComment.save();
+    res.status(201).json(savedComment);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
 // --- START SERVER ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
