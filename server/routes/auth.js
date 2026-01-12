@@ -1,13 +1,14 @@
 const router = require('express').Router();
 const User = require('../models/User');
-const Admin = require('../models/admin');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// REGISTER - Sorun yok dediğin kısım, dokunmadık.
+// REGISTER
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
+    
+    // Şifreyi güvenli hale getir
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -24,51 +25,45 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// LOGIN - Sadece User eşleşmesini tamir eden kısım
+// LOGIN (Conflict Çözülmüş Versiyon)
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. ADIM: Admin Kontrolü (Burası zaten çalışıyor)
-    let account = await Admin.findOne({ email: email });
-    let type = "admin";
-
-    // 2. ADIM: User Kontrolü (Hata buradaydı, sağlamlaştırdık)
-    if (!account) {
-      account = await User.findOne({ email: email });
-      type = "user";
-    }
-
-    // 3. ADIM: Hesap kontrolü
-    if (!account) {
+    // 1. Kullanıcıyı bul (Tek model üzerinden kontrol)
+    const user = await User.findOne({ email: email });
+    if (!user) {
       return res.status(404).json("Account not found!");
     }
 
-    // 4. ADIM: Şifre Eşleştirme (Bcrypt karşılaştırması)
-    // DB'deki hashlenmiş şifre ile inputtan gelen düz şifreyi kıyaslar
-    const isPasswordCorrect = await bcrypt.compare(password, account.password);
-    
+    // 2. Şifre kontrolü
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(400).json("Wrong password!");
     }
 
-    // 5. ADIM: Token Üretimi
+    // 3. Token Üretimi (isAdmin veya role bilgisini içine gömüyoruz)
     const accessToken = jwt.sign(
-      { id: account._id, userType: type },
+      { id: user._id, isAdmin: user.role === "admin" }, 
       process.env.JWT_SECRET || "default_secret",
       { expiresIn: "5d" }
     );
 
-    // 6. ADIM: Veriyi Düzeltme ve Gönderme
-    // Şifreyi objeden çıkarıp geri kalan her şeyi gönderiyoruz
-    const userObject = account.toObject();
-    const { password: userPassword, ...otherInfo } = userObject;
+    // 4. Admin durumuna göre dinamik mesaj oluşturma
+    const isAdmin = user.role === "admin";
+    const welcomeMessage = isAdmin 
+      ? `Yönetici Paneline Hoş Geldiniz, Sayın Admin ${user.username}. Tüm yetkiler aktif.` 
+      : `Giriş başarılı! Hoş geldin, ${user.username}`;
+
+    // 5. Şifreyi gizleyip veriyi gönder
+    const { password: userPassword, ...otherInfo } = user._doc;
 
     res.status(200).json({
       ...otherInfo,
+      message: welcomeMessage,
       accessToken,
-      userType: type,
-      username: account.username
+      isAdmin: isAdmin,
+      username: user.username
     });
 
   } catch (err) {
