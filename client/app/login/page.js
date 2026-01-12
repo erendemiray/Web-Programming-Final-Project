@@ -1,65 +1,81 @@
 "use client";
 import { useState } from "react";
-import axios from "axios"; // Import Axios
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
+    setError(""); // Önceki hatayı temizle
 
     try {
-      // Send request to our backend server (Port 5000)
+      // HATA BURADAYDI: email ve password'ü bir obje içinde gönderiyoruz
       const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email: email,
-        password: password
+        email,
+        password,
       });
 
-      console.log("Login Success! Token:", res.data.accessToken);
-      alert("Login Successful! Check console for token.");
-      
-      // We will save the token to local storage later
+      // BİLGİLERİ KAYDEDİYORUZ
+      localStorage.setItem("token", res.data.accessToken);
+      localStorage.setItem("username", res.data.username);
+      localStorage.setItem("userType", res.data.userType);
+
+      // Başarılı giriş bildirimi
+      alert(res.data.message || "Giriş başarılı!");
+
+      // Yönlendirme
+      window.location.href = "/";
     } catch (err) {
-      console.error("Login Error:", err.response?.data);
-      setError(err.response?.data || "Something went wrong!");
+      // Backend'den gelen hata mesajını göster veya genel hata ver
+      const msg = err.response?.data || "Giriş bilgileri hatalı!";
+      setError(typeof msg === 'string' ? msg : "Giriş başarısız!");
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-      <form onSubmit={handleLogin} className="bg-gray-800 p-8 rounded-xl shadow-2xl w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-500">Login</h2>
+    <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
+      <form onSubmit={handleLogin} className="bg-gray-900 p-8 rounded-xl border border-gray-800 shadow-2xl w-96">
+        <h2 className="text-3xl font-black mb-6 text-center text-blue-500 uppercase tracking-tighter italic">Login</h2>
         
-        {error && <p className="bg-red-500 text-white p-2 rounded mb-4 text-sm">{error}</p>}
+        {error && (
+          <p className="bg-red-500/10 border border-red-500 text-red-500 p-2 rounded mb-4 text-xs font-bold text-center">
+            {error}
+          </p>
+        )}
 
         <div className="mb-4">
-          <label className="block text-sm mb-2 font-medium">Email Address</label>
+          <label className="block text-xs mb-2 font-bold uppercase text-gray-500">Email Address</label>
           <input 
             type="email" 
-            className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-blue-500 focus:outline-none"
+            className="w-full p-3 rounded bg-black border border-gray-800 focus:border-blue-500 focus:outline-none transition"
+            placeholder="email@example.com"
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm mb-2 font-medium">Password</label>
+          <label className="block text-xs mb-2 font-bold uppercase text-gray-500">Password</label>
           <input 
             type="password" 
-            className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-blue-500 focus:outline-none"
+            className="w-full p-3 rounded bg-black border border-gray-800 focus:border-blue-500 focus:outline-none transition"
+            placeholder="••••••••"
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
 
-        <button type="submit" className="w-full bg-blue-600 py-2 rounded font-bold hover:bg-blue-700 transition">
+        <button type="submit" className="w-full bg-blue-600 py-3 rounded font-black hover:bg-blue-700 transition uppercase tracking-widest shadow-lg">
           Sign In
         </button>
-        <p className="mt-4 text-sm text-center text-gray-400">
-          Don't have an account? <a href="/register" className="text-blue-400 hover:underline">Register here</a>
+        
+        <p className="mt-6 text-xs text-center text-gray-500 uppercase font-bold">
+          Don't have an account? <a href="/register" className="text-blue-500 hover:text-blue-400 underline ml-1">Register here</a>
         </p>
       </form>
     </div>

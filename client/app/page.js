@@ -1,41 +1,27 @@
-const movies = [
-  {
-    id: 1,
-    title: "Inception",
-    rating: 8.8,
-    image: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg",
-    category: "Sci-Fi"
-  },
-  {
-    id: 2,
-    title: "The Dark Knight",
-    rating: 9.0,
-    image: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_.jpg",
-    category: "Action"
-  },
-  {
-    id: 3,
-    title: "Interstellar",
-    rating: 8.7,
-    image: "https://m.media-amazon.com/images/M/MV5BYzdjMDAxZGItMjI2My00ODA1LTlkNzItOWFjMDU5ZDJlYWY3XkEyXkFqcGc@._V1_.jpg",
-    category: "Sci-Fi"
-  },
-  {
-    id: 4,
-    title: "Pulp Fiction",
-    rating: 8.9,
-    image: "https://upload.wikimedia.org/wikipedia/tr/thumb/f/fa/Pulp_Fiction_%28film%2C_1994%29.jpg/250px-Pulp_Fiction_%28film%2C_1994%29.jpg",
-    category: "Crime"
-  },
-  {
-    id: 5,
-    title: "The Godfather",
-    rating: 9.2,
-    image: "https://m.media-amazon.com/images/M/MV5BNGEwYjgwOGQtYjg5ZS00Njc1LTk2ZGEtM2QwZWQ2NjdhZTE5XkEyXkFqcGc@._V1_.jpg",
-    category: "Drama"
-  }
-];
+"use client";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import Link from "next/link";
+
 export default function Home() {
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        // Backend'deki get movies rotasına istek atıyoruz
+        const res = await axios.get("http://localhost:5000/api/movies");
+        setMovies(res.data);
+      } catch (err) {
+        console.error("Filmler yüklenirken hata oluştu:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovies();
+  }, []);
+
   return (
     <main className="bg-gray-950 min-h-screen">
       {/* Hero Section */}
@@ -52,31 +38,37 @@ export default function Home() {
           Popular Movies
         </h2>
         
-        {/* İşte Burası! Map fonksiyonu ile filmleri dizeceğimiz grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-          {movies.map((movie) => (
-            <div key={movie.id} className="group cursor-pointer">
-              {/* Film Afişi */}
-              <div className="relative overflow-hidden rounded-xl h-80 mb-3 border border-gray-800 group-hover:border-blue-500 transition-all duration-300">
-                <img 
-                  src={movie.image} 
-                  alt={movie.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                {/* Puan Badge */}
-                <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg">
-                  ★ {movie.rating}
+        {loading ? (
+          <div className="text-white text-center py-10">Filmler yükleniyor...</div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+            {movies.map((movie) => (
+              <Link href={`/movie/${movie._id}`} key={movie._id} className="group cursor-pointer">
+                <div className="relative overflow-hidden rounded-xl h-80 mb-3 border border-gray-800 group-hover:border-blue-500 transition-all duration-300">
+                  <img 
+                    src={movie.image} 
+                    alt={movie.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg">
+                    ★ {movie.rating}
+                  </div>
                 </div>
-              </div>
 
-              {/* Film Bilgisi */}
-              <h3 className="text-white font-semibold truncate group-hover:text-blue-500 transition">
-                {movie.title}
-              </h3>
-              <p className="text-gray-500 text-xs mt-1 uppercase tracking-wider">{movie.category}</p>
-            </div>
-          ))}
-        </div>
+                <h3 className="text-white font-semibold truncate group-hover:text-blue-500 transition">
+                  {movie.title}
+                </h3>
+                <p className="text-gray-500 text-xs mt-1 uppercase tracking-wider">{movie.category}</p>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {movies.length === 0 && !loading && (
+          <div className="text-gray-500 text-center py-10 underline">
+            Henüz film eklenmemiş. Admin panelinden film eklemeyi dene!
+          </div>
+        )}
       </div>
     </main>
   );

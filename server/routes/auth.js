@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
+    
+    // Şifreyi güvenli hale getir
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -16,48 +18,58 @@ router.post('/register', async (req, res) => {
       password: hashedPassword,
     });
 
-    const user = await newUser.save();
-    res.status(200).json(user);
+    await newUser.save();
+    res.status(200).json({ message: "Registration successful" });
   } catch (err) {
-    console.log("KAYIT HATASI:", err); // Terminale yaz
     res.status(500).json({ hata: err.message });
   }
 });
 
-// LOGIN (Hata Dedektifli Versiyon)
+// LOGIN (Conflict Çözülmüş Versiyon)
 router.post('/login', async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
-    if (!user) return res.status(404).json("User not found!");
+    const { email, password } = req.body;
 
-    const validPassword = await bcrypt.compare(req.body.password, user.password);
-    if (!validPassword) return res.status(400).json("Wrong password!");
+    // 1. Kullanıcıyı bul (Tek model üzerinden kontrol)
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json("Account not found!");
+    }
 
+    // 2. Şifre kontrolü
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json("Wrong password!");
+    }
+
+    // 3. Token Üretimi (isAdmin veya role bilgisini içine gömüyoruz)
     const accessToken = jwt.sign(
-      { id: user._id, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET,
+      { id: user._id, isAdmin: user.role === "admin" }, 
+      process.env.JWT_SECRET || "default_secret",
       { expiresIn: "5d" }
     );
 
-    // Admin durumuna göre dinamik mesaj
-    const welcomeMessage = user.isAdmin 
+    // 4. Admin durumuna göre dinamik mesaj oluşturma
+    const isAdmin = user.role === "admin";
+    const welcomeMessage = isAdmin 
       ? `Yönetici Paneline Hoş Geldiniz, Sayın Admin ${user.username}. Tüm yetkiler aktif.` 
       : `Giriş başarılı! Hoş geldin, ${user.username}`;
 
-    const { password, ...info } = user._doc;
+    // 5. Şifreyi gizleyip veriyi gönder
+    const { password: userPassword, ...otherInfo } = user._doc;
 
     res.status(200).json({
-      ...info,
+      ...otherInfo,
       message: welcomeMessage,
       accessToken,
-      isAdmin: user.isAdmin,
+      isAdmin: isAdmin,
       username: user.username
     });
 
   } catch (err) {
-    res.status(500).json({ mesaj: "Sunucu Hatası", detay: err.message });
+    console.error("Login hatası detay:", err);
+    res.status(500).json({ message: "Server error", detail: err.message });
   }
 });
-
 
 module.exports = router;
