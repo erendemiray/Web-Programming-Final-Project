@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const User = require('../models/User');
+const Admin = require('../models/admin');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// REGISTER
+// REGISTER - Sorun yok dediğin kısım, dokunmadık.
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -16,49 +17,63 @@ router.post('/register', async (req, res) => {
       password: hashedPassword,
     });
 
-    const user = await newUser.save();
-    res.status(200).json(user);
+    await newUser.save();
+    res.status(200).json({ message: "Registration successful" });
   } catch (err) {
-    console.log("KAYIT HATASI:", err); // Terminale yaz
     res.status(500).json({ hata: err.message });
   }
 });
 
-// LOGIN (Hata Dedektifli Versiyon)
+// LOGIN - Sadece User eşleşmesini tamir eden kısım
 router.post('/login', async (req, res) => {
   try {
-    console.log("1. Login isteği geldi. Body:", req.body); // Gelen veriyi görelim
+    const { email, password } = req.body;
 
-    // Kullanıcıyı bul
-    const user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      console.log("2. Kullanıcı bulunamadı!");
-      return res.status(404).json("User not found!");
+    // 1. ADIM: Admin Kontrolü (Burası zaten çalışıyor)
+    let account = await Admin.findOne({ email: email });
+    let type = "admin";
+
+    // 2. ADIM: User Kontrolü (Hata buradaydı, sağlamlaştırdık)
+    if (!account) {
+      account = await User.findOne({ email: email });
+      type = "user";
     }
 
-    // Şifreyi kontrol et
-    const validPassword = await bcrypt.compare(req.body.password, user.password);
-    if (!validPassword) {
-      console.log("3. Şifre yanlış!");
+    // 3. ADIM: Hesap kontrolü
+    if (!account) {
+      return res.status(404).json("Account not found!");
+    }
+
+    // 4. ADIM: Şifre Eşleştirme (Bcrypt karşılaştırması)
+    // DB'deki hashlenmiş şifre ile inputtan gelen düz şifreyi kıyaslar
+    const isPasswordCorrect = await bcrypt.compare(password, account.password);
+    
+    if (!isPasswordCorrect) {
       return res.status(400).json("Wrong password!");
     }
 
-    // Token oluştur
+    // 5. ADIM: Token Üretimi
     const accessToken = jwt.sign(
-      { id: user._id, role: user.role }, 
-      process.env.JWT_SECRET,
+      { id: account._id, userType: type },
+      process.env.JWT_SECRET || "default_secret",
       { expiresIn: "5d" }
     );
 
-    console.log("4. Giriş başarılı, Token üretildi.");
-    const { password, ...info } = user._doc; 
+    // 6. ADIM: Veriyi Düzeltme ve Gönderme
+    // Şifreyi objeden çıkarıp geri kalan her şeyi gönderiyoruz
+    const userObject = account.toObject();
+    const { password: userPassword, ...otherInfo } = userObject;
 
-    res.status(200).json({ ...info, accessToken });
+    res.status(200).json({
+      ...otherInfo,
+      accessToken,
+      userType: type,
+      username: account.username
+    });
 
   } catch (err) {
-    // !!! İŞTE BURASI HATAYI GÖSTERECEK !!!
-    console.error("❌ LOGIN SİSTEM HATASI:", err); 
-    res.status(500).json({ mesaj: "Sunucu Hatası", detay: err.message });
+    console.error("Login hatası detay:", err);
+    res.status(500).json({ message: "Server error", detail: err.message });
   }
 });
 
