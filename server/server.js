@@ -99,20 +99,29 @@ const createFirstAdmin = async () => {
   }
 };
 
-const seedMovies = async () => {
+
+const Comment = require("./models/comment");
+
+// Belirli bir filme ait yorumları getir
+app.get("/api/comments/:movieId", async (req, res) => {
   try {
-    const count = await Movie.countDocuments();
-    if (count === 0) {
-      await Movie.create([
-        { title: "Inception", rating: 8.8, image: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg", category: "Sci-Fi" },
-        { title: "The Dark Knight", rating: 9.0, image: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_.jpg", category: "Action" }
-      ]);
-      console.log("🚀 Initial movies added to DB!");
-    }
+    const comments = await Comment.find({ movieId: req.params.movieId }).sort({ createdAt: -1 });
+    res.status(200).json(comments);
   } catch (err) {
-    console.error("Movie Seed Error:", err);
+    res.status(500).json(err);
   }
-};
+});
+
+// Yorum ekle
+app.post("/api/comments/add", async (req, res) => {
+  try {
+    const newComment = new Comment(req.body);
+    const savedComment = await newComment.save();
+    res.status(201).json(savedComment);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
 
 // --- START SERVER ---
 const PORT = process.env.PORT || 5000;
