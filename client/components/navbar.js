@@ -31,7 +31,6 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center">
-            {/* Sadece Add Movie kaldı, Popular kaldırıldı */}
             <Link href="/add-movie" className="text-yellow-500 hover:text-yellow-400 font-bold border border-yellow-500/20 px-3 py-1.5 rounded bg-yellow-500/5 transition text-xs uppercase tracking-widest">
               + Add Movie
             </Link>
@@ -41,21 +40,27 @@ export default function Navbar() {
         {/* Profil Kısmı */}
         <div className="flex items-center space-x-4">
           {user ? (
-            <div className="flex items-center space-x-4">
-              <div className="flex flex-col items-end">
+            <div className="flex items-center space-x-6">
+              {/* Dashboard/Profile Linki (İsim ve Rol) */}
+              <Link href="/profile" className="flex flex-col items-end hover:opacity-80 transition cursor-pointer">
                 <span className="text-white text-xs font-bold">{user}</span>
                 <span className={`text-[9px] uppercase font-black tracking-tighter ${isAdmin ? 'text-yellow-500' : 'text-blue-400'}`}>
                   {isAdmin ? 'Administrator' : 'Movie Critic'}
                 </span>
-              </div>
+              </Link>
               
               <div className="relative group">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-black cursor-pointer border-2 border-gray-800 transition shadow-lg ${isAdmin ? 'bg-amber-600' : 'bg-blue-600'}`}>
-                  {user[0].toUpperCase()}
-                </div>
+                {/* Dashboard/Profile Linki (Avatar) */}
+                <Link href="/profile">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-black cursor-pointer border-2 border-gray-800 transition shadow-lg hover:scale-105 ${isAdmin ? 'bg-amber-600' : 'bg-blue-600'}`}>
+                    {user[0].toUpperCase()}
+                  </div>
+                </Link>
+
+                {/* Logout Butonu */}
                 <button 
                   onClick={handleLogout}
-                  className="absolute top-12 right-0 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-3 py-1.5 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap uppercase tracking-tighter"
+                  className="absolute top-12 right-0 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-3 py-1.5 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap uppercase tracking-tighter z-50"
                 >
                   Logout
                 </button>
