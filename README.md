@@ -1,3 +1,7 @@
+https://github.com/erendemiray/Web-Programming-Final-Project
+230408008 Mustafa Eren Demiray 
+230408021 Esma Şevval Marangoz
+
 # 🎬 FILMCRITIC - Full-Stack Movie Review Platform
 
 A comprehensive full-stack movie platform where users can browse movies, read details, and post reviews. The system includes a secure admin portal for content management.
