@@ -1,7 +1,3 @@
-https://github.com/erendemiray/Web-Programming-Final-Project
-230408008 Mustafa Eren Demiray 
-230408021 Esma Şevval Marangoz
-
 # 🎬 FILMCRITIC - Full-Stack Movie Review Platform
 
 A comprehensive full-stack movie platform where users can browse movies, read details, and post reviews. The system includes a secure admin portal for content management.
@@ -30,12 +26,12 @@ A comprehensive full-stack movie platform where users can browse movies, read de
 
 ## 📦 Installation
 
-1.  **Clone the repository:**
+1. **Clone the repository:**
     ```bash
-    git clone [https://github.com/yourusername/filmcritic.git](https://github.com/yourusername/filmcritic.git)
+    git clone https://github.com/erendemiray/Web-Programming-Final-Project
     ```
 
-2.  **Setup Backend:**
+2. **Setup Backend:**
     ```bash
     cd server
     npm install
@@ -50,7 +46,7 @@ A comprehensive full-stack movie platform where users can browse movies, read de
     node server.js
     ```
 
-3.  **Setup Frontend:**
+3. **Setup Frontend:**
     ```bash
     cd client
     npm install
@@ -65,4 +61,5 @@ The system automatically seeds an initial admin account upon first database conn
 ---
 
 ### Project Status: **Completed ✅**
+
 This project successfully implements all core CRUD operations and security protocols required for a modern web application.
