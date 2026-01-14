@@ -1,8 +1,8 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
-
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
@@ -28,15 +28,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white font-sans">
-
-      
       <main className="container mx-auto px-6 py-12">
         {/* HERO SECTION & SEARCH BAR */}
         <div className="flex flex-col items-center mb-16">
           <h1 className="text-6xl font-black italic tracking-tighter uppercase mb-8 text-center">
             Find Your Next <span className="text-blue-500">Masterpiece</span>
           </h1>
-          
+
           <div className="w-full max-w-2xl relative">
             <input
               type="text"
