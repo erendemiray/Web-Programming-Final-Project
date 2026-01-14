@@ -14,7 +14,7 @@ export default function LoginPage() {
     setError(""); // Önceki hatayı temizle
 
     try {
-      // HATA BURADAYDI: email ve password'ü bir obje içinde gönderiyoruz
+      //  email ve password'ü bir obje içinde gönderiyoruz
       const res = await axios.post("http://localhost:5000/api/auth/login", {
         email,
         password,
